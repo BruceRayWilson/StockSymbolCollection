@@ -5,7 +5,7 @@ from typing import List, Dict
 import pandas as pd
 import shutil
 
-MAX_WORKERS = 20  # Global constant for max number of threads
+MAX_WORKERS = 5  # Global constant for max number of threads
 
 class StockSymbolCollection:
 
@@ -115,9 +115,9 @@ class StockSymbolCollection:
     def fetch_beta_values(self) -> None:
         """
         Fetches beta values for each stock ticker and updates stock_data dictionary.
-        Uses 20 threads for concurrent fetching.
+        Uses MAX_WORKERS threads for concurrent fetching.
         """
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             results = list(executor.map(self._fetch_beta_for_ticker, self.tickers))
         
         # Update the stock_data with fetched beta values.

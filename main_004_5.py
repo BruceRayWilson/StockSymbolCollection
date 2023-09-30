@@ -8,6 +8,7 @@ import shutil
 MAX_WORKERS = 5  # Global constant for max number of threads
 
 class StockSymbolCollection:
+
     def __init__(self, csv_filename: str):
         """
         Initializes the StockSymbolCollection with tickers from the given CSV file.
@@ -21,8 +22,6 @@ class StockSymbolCollection:
         """
         self.tickers = self._load_tickers_from_csv(csv_filename)
         self.stock_data = {}
-
-
 
     def _load_tickers_from_csv(self, csv_filename: str) -> List[str]:
         """
@@ -81,7 +80,7 @@ class StockSymbolCollection:
         valid_tickers = []
         invalid_tickers = []
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             results = list(executor.map(self._is_valid_ticker, self.tickers))
         
         for ticker, is_valid in zip(self.tickers, results):
