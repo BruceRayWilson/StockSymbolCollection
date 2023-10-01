@@ -126,7 +126,7 @@ class StockSymbolCollection:
 
     def display_beta_values(self) -> None:
         """
-        Displays beta values for each stock ticker.
+        Displays beta values for each stock ticker and saves them to a CSV file.
         """
         for ticker, data in self.stock_data.items():
             print(f"{ticker}: Beta = {data['Beta']}")

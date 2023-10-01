@@ -122,13 +122,33 @@ class StockSymbolCollection:
         for data in results:
             self.stock_data.update(data)
 
+
     def display_beta_values(self) -> None:
         """
-        Displays beta values for each stock ticker.
+        Displays beta values for each stock ticker. If Beta is None, it's set to 0.
+        The results are sorted by Beta in descending order and saved to a CSV file.
         """
-        for ticker, data in self.stock_data.items():
+        # Sort the stock_data based on Beta values (set to 0 if None) in descending order
+        sorted_stock_data = dict(sorted(self.stock_data.items(), 
+                                        key=lambda item: item[1]['Beta'] if item[1]['Beta'] is not None else 0, 
+                                        reverse=True))
+
+        # Update Beta values in the sorted dictionary to 0 if they are None
+        for ticker, data in sorted_stock_data.items():
+            if data['Beta'] is None:
+                data['Beta'] = 0
+
+        # Print the sorted data
+        for ticker, data in sorted_stock_data.items():
             print(f"{ticker}: Beta = {data['Beta']}")
 
+        # Save the sorted data to a CSV file
+        with open('sorted_beta_values.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Ticker", "Beta"])  # header row
+            for ticker, data in sorted_stock_data.items():
+                writer.writerow([ticker, data['Beta']])
+                
 if __name__ == "__main__":
     # Specify the path to your CSV file.
     csv_filename = 'rf_train_base.csv'
