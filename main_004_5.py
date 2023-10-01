@@ -89,13 +89,15 @@ class StockSymbolCollection:
             else:
                 invalid_tickers.append(ticker)
         
-        self.tickers = valid_tickers  # Update tickers list to contain only valid tickers
-
         self._save_to_csv('valid_tickers.csv', valid_tickers)
         self._save_to_csv('invalid_tickers.csv', invalid_tickers)
 
         # Copy the contents of 'invalid_tickers.csv' to 'rf_train.csv'
         shutil.copy('invalid_tickers.csv', 'rf_train.csv')
+
+        # Reinitialize self.tickers with the contents of 'rf_train.csv'
+        self.tickers = self._load_tickers_from_csv('valid_tickers.csv')
+
 
     def _save_to_csv(self, filename: str, tickers: List[str]) -> None:
         """
