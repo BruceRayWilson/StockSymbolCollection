@@ -59,7 +59,7 @@ class StockSymbolCollection:
 
     def _fetch_beta_for_ticker(self, ticker: str) -> Dict[str, float]:
         """
-        Fetches the beta value for a given ticker.
+        Fetches the beta value for a given ticker and prints the result.
 
         Args:
         ticker (str): The stock ticker.
@@ -69,12 +69,16 @@ class StockSymbolCollection:
         """
         stock = yf.Ticker(ticker)
         beta = stock.info.get("beta", None)
+        
+        # Print the fetched beta value for the ticker
+        print(f"Fetched {ticker}: Beta = {beta}")
+        
         return {ticker: {"Beta": beta}}
 
     def validate_tickers(self) -> None:
         """
         Validates stock tickers and saves valid and invalid tickers to separate CSV files.
-        Invalid tickers are then copied to 'rf_train.csv'.
+        Invalid tickers are then copied to 'train.csv'.
         Uses 10 threads for concurrent validation.
         """
         valid_tickers = []
@@ -92,11 +96,11 @@ class StockSymbolCollection:
         self._save_to_csv('valid_tickers.csv', valid_tickers)
         self._save_to_csv('invalid_tickers.csv', invalid_tickers)
 
-        # Copy the contents of 'invalid_tickers.csv' to 'rf_train.csv'
-        shutil.copy('invalid_tickers.csv', 'rf_train.csv')
+        # Copy the contents of 'invalid_tickers.csv' to 'train.csv'
+        shutil.copy('invalid_tickers.csv', 'train.csv')
 
-        # Reinitialize self.tickers with the contents of 'rf_train.csv'
-        self.tickers = self._load_tickers_from_csv('rf_train.csv')
+        # Reinitialize self.tickers with the contents of 'train.csv'
+        self.tickers = self._load_tickers_from_csv('valid_tickers.csv')
 
 
     def _save_to_csv(self, filename: str, tickers: List[str]) -> None:
@@ -124,15 +128,47 @@ class StockSymbolCollection:
         for data in results:
             self.stock_data.update(data)
 
+
     def display_beta_values(self) -> None:
         """
-        Displays beta values for each stock ticker and saves them to a CSV file.
+        Displays beta values for each stock ticker. If Beta is None, it's set to 0.
+        The results are sorted by Beta in descending order and saved to a CSV file.
         """
-        for ticker, data in self.stock_data.items():
+        # Sort the stock_data based on Beta values (set to 0 if None) in descending order
+        sorted_stock_data = dict(sorted(self.stock_data.items(), 
+                                        key=lambda item: item[1]['Beta'] if item[1]['Beta'] is not None else 0, 
+                                        reverse=True))
+
+        # Update Beta values in the sorted dictionary to 0 if they are None
+        for ticker, data in sorted_stock_data.items():
+            if data['Beta'] is None:
+                data['Beta'] = 0
+
+        # Print the sorted data
+        for ticker, data in sorted_stock_data.items():
             print(f"{ticker}: Beta = {data['Beta']}")
 
+        # Save the sorted data to a CSV file
+        with open('sorted_beta_values.csv', 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Ticker", "Beta"])  # header row
+            for ticker, data in sorted_stock_data.items():
+                writer.writerow([ticker, data['Beta']])
+
+    @classmethod
+    def exec(cls, csv_filename: str) -> None:
+        """
+        Validates tickers, fetches their beta values, and displays the results.
+
+        Args:
+        csv_filename (str): Path to the CSV file containing stock tickers.
+        """
+        collection_instance = cls(csv_filename)
+        collection_instance.validate_tickers()
+        collection_instance.fetch_beta_values()
+        collection_instance.display_beta_values()
+
 if __name__ == "__main__":
-    collection = StockSymbolCollection()
-    collection.validate_tickers('rf_train_base.csv')
-    collection.fetch_beta_values()
-    collection.display_beta_values()
+    # Specify the path to your CSV file.
+    csv_filename = 'train_base.csv'
+    StockSymbolCollection.exec(csv_filename)
